@@ -1,8 +1,4 @@
-bidict==0.21.4
-click==8.0.3
 Flask==2.0.2
-itsdangerous==2.0.1
-Jinja2==3.0.3
 MarkupSafe==2.0.1
 Werkzeug==2.0.2
 Flask-Cors==3.0.8
@@ -12,3 +8,4 @@ jsonpath-ng==1.5.3
 PyYAML==5.3.1
 requests==2.30.0
 pylint
+waitress

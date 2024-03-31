@@ -12,4 +12,4 @@ Install requirements
 pip install -r backend/src/requirements.txt
 
 Run project
-python .\backend\src\api.py
+python backend\src\wsgi.py
