@@ -1,6 +1,7 @@
 """ Module for core """
 from os.path import splitext
 import os
+from baseObject import BaseObject
 from exceptions import ImportException
 from validator import Validator
 from model import Model
@@ -57,6 +58,21 @@ class Core:
             self.schema["info"]["version"] = self.version
             #self.schema = JsonRef.replace_refs(schema)
 
+    def create_method(self, new_data, object_type):
+        
+        # Validator. Stops here if object is invalid
+        validator_error = self.validator.validate_object_creation(object_type, new_data)
+        assert validator_error is None, {"validator": validator_error}
+
+        # Create object
+        new_object = BaseObject(object_type)
+
+        new_object.edit(new_data)
+
+        # Add to model
+        self.model.add_obj(object_type, new_object)
+        return new_object.data
+        
     def import_image(self, image_file_name):
         """ Import and install a package """
         image_file, ext = splitext(image_file_name.filename)
@@ -78,9 +94,11 @@ class Core:
         return image_file_name
 
 
-    def import_object(object_file, object_type):
-        print(object_file)
-        # TODO import_object
+    def import_objects(self, object_file):
+        with open(object_file, "r", encoding="utf-8") as objects:
+            for ob in objects:
+                if ob["type"] in self.validator.get_object_types():
+                    self.create_method(ob, ob["type"])
 
         return True
 

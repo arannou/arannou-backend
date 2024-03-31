@@ -83,22 +83,10 @@ def get_all_objects(object_type):
 def create_object(object_type):
     """ Create an object from scratch if possible"""
     if request.is_json:
-        def create_method():
-            new_data = request.get_json()
-            # Validator. Stops here if object is invalid
-            validator_error = core.instance.validator.validate_object_creation(object_type, new_data)
-            assert validator_error is None, {"validator": validator_error}
-
-            # Create object
-            new_object = BaseObject(object_type)
-
-            new_object.edit(new_data)
-
-            # Add to model
-            core.instance.model.add_obj(object_type, new_object)
-            return new_object.data
         
-        return endpoint_wrapper(object_type, create_method)
+        return endpoint_wrapper(
+            object_type,
+            core.instance.create_method(request.get_json(), object_type))
     else :
         return {"error" : "request does not contain json body"}, 400
 
