@@ -5,8 +5,8 @@ from logging.config import dictConfig
 import traceback
 from flask import Flask, request, redirect, render_template
 from flask_cors import CORS
-from banana import Banana
-from validator import Validator
+from baseObject import BaseObject
+from utils import generate_id
 import core
 
 # Create flask app
@@ -41,9 +41,6 @@ app.config['JSON_SORT_KEYS'] = False
 # Enable cors
 cors = CORS(app)
 
-
-# init object validator module
-core.instance.validator = Validator()
 
 
 @app.route('/')
@@ -80,6 +77,7 @@ def swagger():
 @app.route('/api/<object_type>')
 def get_all_objects(object_type):
     """ Get all objects of one kind """
+
     return {object_type: core.instance.model.get_obj_lists(object_type)}
 
 @app.route('/api/<object_type>', methods = ['POST'])
@@ -93,14 +91,16 @@ def create_object(object_type):
             assert validator_error is None, {"validator": validator_error}
 
             # Create object
-            if object_type == "bananas":
-                new_object = Banana()
-            elif object_type == "apples":
-                new_object = Banana()
+            # if object_type == "bananas":
+            new_object = BaseObject()
+
 
             new_object.edit(new_data)
 
-            # TODO check unicity on name
+            if not new_object["name"]:
+                new_object["name"] = generate_id()
+            assert core.instance.model.get_obj(object_type, new_object["name"]) is None, "Object already exist with that name"
+
             # Add to model
             core.instance.model.add_obj(object_type, new_object)
             return new_object.data
@@ -148,23 +148,19 @@ def delete_object(object_type, object_name):
 def import_object(object_type):
     """ Import a object from file """
 
-    def banana_method():
+    def import_method():
         object_file = request.files[object_type]
-        imported = core.instance.import_banana(object_file)
+        imported = core.instance.import_object(object_file, object_type)
         return imported.data
     
-    def apple_method():
-        object_file = request.files[object_type]
-        imported = core.instance.import_apple(object_file)
-        return imported.data
-
-    return endpoint_wrapper(object_type, banana_method, apple_method)
+    return endpoint_wrapper(object_type, import_method)
 
 
 def endpoint_wrapper(object_type, endpoint_method):
     """ Wrap api actions with exceptions and map objects """
+    
     try:
-        if object_type in ['apples', 'bananas']:
+        if object_type in core.instance.validator.get_object_types():
             return endpoint_method(), 201
         else:
             # unknown type of object
@@ -185,8 +181,8 @@ def endpoint_wrapper(object_type, endpoint_method):
         return err, 400
 
 
-if __name__ == "__main__":
-    HOST = "0.0.0.0"
-    port = int(os.getenv('PORT', "81"))
+# if __name__ == "__main__":
+#     HOST = "0.0.0.0"
+#     port = int(os.getenv('PORT', "81"))
 
-    app.run(host=HOST, port=port)
+#     app.run(host=HOST, port=port)
