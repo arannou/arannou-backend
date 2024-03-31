@@ -38,7 +38,7 @@ class Model:
                 # Load
                 # if model_type == "bananas":
                 for obj in model_obj:
-                    self.state[model_type].append(BaseObject(object_data=obj))
+                    self.state[model_type].append(BaseObject(model_type, object_data=obj))
 
 
 
@@ -56,21 +56,21 @@ class Model:
                 # Dump result to model file
                 json.dump(self.get_obj_lists(model_type), model_file, indent=2)
 
-    def get_obj(self, object_type, name):
-        """ Get object by name """
-        matches=[obj for obj in self.state[object_type] if obj.name == name]
+    def get_obj(self, object_type, id):
+        """ Get object by id """
+        matches=[obj for obj in self.state[object_type] if obj.id == id]
 
         if len(matches) >= 1:
             return matches[0]
         return None
 
-    def delete_obj(self, object_type, name):
+    def delete_obj(self, object_type, id):
         """ Delete object"""
         # Retrieve object
-        obj = self.get_obj(object_type, name)
+        obj = self.get_obj(object_type, id)
 
         # Remove it from model
-        self.state[object_type] = [obj for obj in self.state[object_type] if obj.name != name]
+        self.state[object_type] = [obj for obj in self.state[object_type] if obj.id != id]
 
         # Write model on disk
         self.save()
@@ -81,11 +81,3 @@ class Model:
 
         # Save on disk
         self.save()
-
-    def get_package(self, name, version):
-        """ Return package with name and version if exists """
-        matches = [pkg for pkg in self.state["packages"] if pkg["name"] == name and pkg["version"] == version]
-
-        if len(matches) == 0:
-            return None
-        return matches[0]

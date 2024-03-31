@@ -6,7 +6,6 @@ import traceback
 from flask import Flask, request, redirect, render_template
 from flask_cors import CORS
 from baseObject import BaseObject
-from utils import generate_id
 import core
 
 # Create flask app
@@ -91,15 +90,9 @@ def create_object(object_type):
             assert validator_error is None, {"validator": validator_error}
 
             # Create object
-            # if object_type == "bananas":
-            new_object = BaseObject()
-
+            new_object = BaseObject(object_type)
 
             new_object.edit(new_data)
-
-            if not new_object["name"]:
-                new_object["name"] = generate_id()
-            assert core.instance.model.get_obj(object_type, new_object["name"]) is None, "Object already exist with that name"
 
             # Add to model
             core.instance.model.add_obj(object_type, new_object)
@@ -109,14 +102,14 @@ def create_object(object_type):
     else :
         return {"error" : "request does not contain json body"}, 400
 
-@app.route('/api/<object_type>/<object_name>', methods = ['PUT'])
-def edit_object(object_type, object_name):
+@app.route('/api/<object_type>/<object_id>', methods = ['PUT'])
+def edit_object(object_type, object_id):
     """ Edit a given object if possible """
     if request.is_json:
         def edit_method():
             new_data = request.get_json()
-            new_object = core.instance.model.get_obj(object_type, object_name)
-            assert new_object, f"{object_type} with name {object_name} is not found"
+            new_object = core.instance.model.get_obj(object_type, object_id)
+            assert new_object, f"{object_type} with id {object_id} is not found"
 
             # Validator
             validator_error = core.instance.validator.validate_object_edit(object_type, new_data)
@@ -124,7 +117,7 @@ def edit_object(object_type, object_name):
 
             new_object.edit(new_data)
             core.instance.model.save()
-            core.instance.logger.logs(object_type, object_name+" has been edited")
+            core.instance.logger.logs(object_type, object_id+" has been edited")
 
             return new_object.data
         
@@ -132,28 +125,28 @@ def edit_object(object_type, object_name):
     else :
         return {"error" : "request does not contain json body"}, 400
 
-@app.route('/api/<object_type>/<object_name>', methods = ['DELETE'])
-def delete_object(object_type, object_name):
+@app.route('/api/<object_type>/<object_id>', methods = ['DELETE'])
+def delete_object(object_type, object_id):
     """ Delete a given object if possible """
 
     def delete_method():
-        assert core.instance.model.get_obj(object_type, object_name), f"{object_type} with name '{object_name}' not found"
-        core.instance.model.delete_obj(object_type, object_name)
-        return object_name
+        assert core.instance.model.get_obj(object_type, object_id), f"{object_type} with id '{object_id}' not found"
+        core.instance.model.delete_obj(object_type, object_id)
+        return object_id
 
     return endpoint_wrapper(object_type, delete_method)
 
 
-@app.route('/api/<object_type>/import', methods=['POST'])
-def import_object(object_type):
-    """ Import a object from file """
+@app.route('/api/import', methods=['POST'])
+def import_objects(object_file):
+    """ Import object from file """
 
     def import_method():
-        object_file = request.files[object_type]
-        imported = core.instance.import_object(object_file, object_type)
+        object_file = request.files[object_file]
+        imported = core.instance.import_objects(object_file)
         return imported.data
     
-    return endpoint_wrapper(object_type, import_method)
+    return endpoint_wrapper("error", import_method)
 
 
 def endpoint_wrapper(object_type, endpoint_method):
