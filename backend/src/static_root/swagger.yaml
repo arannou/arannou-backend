@@ -62,7 +62,7 @@ paths:
           schema:
             $ref: "#/definitions/error"
 
-  /{object_type}/{name}:
+  /{object_type}/{id}:
     put:
       summary: "Update an object of object_type"
       parameters:
@@ -72,10 +72,10 @@ paths:
           required: true
           description: Object type
         - in: path
-          name: name
+          name: id
           type: string
           required: true
-          description: Object name
+          description: Object id
         - in: body
           description: New object containing your modifications
           required: true
@@ -100,10 +100,10 @@ paths:
           required: true
           description: Object type
         - in: path
-          name: name
+          name: id
           type: string
           required: true
-          description: Object name
+          description: Object id
       responses:
         "201":
           description: Object deleted
@@ -136,20 +136,22 @@ definitions:
   bananas:
     type: object
     required:
-      - name
+      - object_type
     properties:
-      name:
-        title: Name
+      object_type:
+        title: Type
         type: string
+        enum: [bananas]
 
   apples:
     type: object
     required:
-      - name
+      - object_type
     properties:
-      name:
-        title: Name
+      object_type:
+        title: Type
         type: string
+        enum: [apples]
 
   error:
     type: object
