@@ -3,14 +3,17 @@ import json
 
 from jsonschema import SchemaError, ValidationError, validate
 import jsonref
-import core
-import utils
+from utils import valid_path_to_string
 
 class Validator:
     """ Validated inputs """
-    def __init__(self):
+    def __init__(self, schema):
         # Load ref parsed schema
-        self.schemas = jsonref.loads(json.dumps(core.instance.schema))
+        self.schemas = jsonref.loads(json.dumps(schema))
+
+
+    def get_object_types(self):
+        return list(self.schemas['definitions'].keys())
 
 
     def validate_syntax(self, object_type, data):
@@ -24,7 +27,7 @@ class Validator:
                 prop_path = self.format_required_errors(exception)
                 message = "is required"
             else:
-                prop_path = utils.valid_path_to_string(exception.path)
+                prop_path = valid_path_to_string(exception.path)
                 message = exception.message
 
             return { prop_path: {"type": "syntax", "message": message }}
@@ -36,7 +39,7 @@ class Validator:
         # Message is always formated like that: '<field>' is a required property. So a split will do the job to retrieve missing field
         missing_prop = required_error.message.split("'")[1]
 
-        return utils.valid_path_to_string(required_error.path)+"/"+missing_prop
+        return valid_path_to_string(required_error.path)+"/"+missing_prop
 
     def validate_object_creation(self, object, new_debug_data):
         """ Check syntax of object """

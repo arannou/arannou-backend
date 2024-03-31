@@ -17,7 +17,7 @@ paths:
 
   /datetime:
     get:
-      description: 'Date and time of the PCD instance with UTC datetime iso8601 format {"datetime_utc": "YYYY-MM-DD HH:mm:ss.µµµµµµ"}'
+      description: 'Date and time of the api instance with UTC datetime iso8601 format {"datetime_utc": "YYYY-MM-DD HH:mm:ss.µµµµµµ"}'
       summary: "Get datetime"
       tags:
         - Diverse

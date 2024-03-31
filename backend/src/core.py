@@ -2,6 +2,7 @@
 from os.path import splitext
 import os
 from exceptions import ImportException
+from validator import Validator
 from model import Model
 from logger import Logger
 import yaml
@@ -15,9 +16,9 @@ class Core:
         os.chdir(os.path.dirname(__file__))
 
         # load all app conf
-        self.logs_path     = os.path.join("../installation", "./app.logs")
-        self.images_path     = os.path.join("../installation", "./images")
-        self.mock_path  = os.path.join("../installation", "./mocking.json")
+        self.logs_path      = os.path.join("../installation", "./app.logs")
+        self.images_path    = os.path.join("../installation", "./images")
+        self.mock_path      = os.path.join("../installation", "./mocking.json")
 
         # Init logger
         self.logger = Logger(self.logs_path)
@@ -28,6 +29,8 @@ class Core:
         # Load schema
         self.load_schema()
 
+        # init object validator module
+        self.validator = Validator(self.schema)
         # Init model
         self.model = Model(self)
 
@@ -73,6 +76,13 @@ class Core:
             raise ImportException(f"Image {image_file} is already uploaded !")
     
         return image_file_name
+
+
+    def import_object(object_file, object_type):
+        print(object_file)
+        # TODO import_object
+
+        return True
 
 
 # Singleton pattern

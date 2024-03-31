@@ -1,7 +1,7 @@
 """ Module for model """
 import os
 import json
-from banana import Banana
+from baseObject import BaseObject
 
 MODEL_PATH = "../installation/models/"
 class Model:
@@ -9,36 +9,36 @@ class Model:
     def __init__(self, core):
         self.core = core
 
-        # Model default value
-        self.state = {
-            "bananas": [],
-            "apples": [],
-            "pears": []
-        }
+        # Model default values
+        self.state = {}
+        for t in self.core.validator.get_object_types():
+            self.state[t] = []
 
         self.load_model_if_possible()
 
     def load_model_if_possible(self):
         """Read model.json if exists"""
+        if not os.path.exists(MODEL_PATH):
+            os.makedirs(MODEL_PATH)
 
-        if os.path.exists(MODEL_PATH):
-            self.core.logger.logs("Model", "starting using existing model "+MODEL_PATH)
+
+        self.core.logger.logs("Model", "starting using existing model "+MODEL_PATH)
 
 
-            for model_type in list(self.state.keys()):
-                model = os.path.join(MODEL_PATH, model_type+'.json')
-                if not os.path.exists(model):
-                    # init file with empty data
-                    with open(model, "w", encoding="utf-8") as model_file:
-                        model_file.write('[]')
+        for model_type in list(self.state.keys()):
+            model = os.path.join(MODEL_PATH, model_type+'.json')
+            if not os.path.exists(model):
+                # init file with empty data
+                with open(model, "w", encoding="utf-8") as model_file:
+                    model_file.write('[]')
 
-                with open(os.path.join(MODEL_PATH, model_type+'.json'),"r", encoding="utf-8") as model_file:
-                    model_obj = json.load(model_file)
+            with open(os.path.join(MODEL_PATH, model_type+'.json'),"r", encoding="utf-8") as model_file:
+                model_obj = json.load(model_file)
 
-                    # Load
-                    if model_type == "bananas":
-                        for obj in model_obj:
-                            self.state[model_type].append(Banana(object_data=obj))
+                # Load
+                # if model_type == "bananas":
+                for obj in model_obj:
+                    self.state[model_type].append(BaseObject(object_data=obj))
 
 
 
