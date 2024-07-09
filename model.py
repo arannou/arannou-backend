@@ -1,7 +1,7 @@
 """ Module for model """
 import os
 import json
-from baseObject import BaseObject
+from base_object import BaseObject
 
 MODEL_PATH = "./installation/models/"
 class Model:
@@ -11,8 +11,8 @@ class Model:
 
         # Model default values
         self.state = {}
-        for t in self.core.validator.get_object_types():
-            self.state[t] = []
+        for stuff in self.core.validator.get_object_types():
+            self.state[stuff] = []
 
         self.load_model_if_possible()
 
@@ -80,4 +80,3 @@ class Model:
 
         # Save on disk
         self.save()
-

@@ -1,11 +1,10 @@
 """ Module for api endpoints"""
-import os
 import json
 from logging.config import dictConfig
 import traceback
 from flask import Flask, request, redirect, render_template
 from flask_cors import CORS
-from baseObject import BaseObject
+from base_object import BaseObject
 from utils import generate_id
 import core
 
@@ -71,8 +70,8 @@ def post_schema():
         new_schema = request.get_json()
         core.instance.replace_schema(new_schema)
         return 'ok', 201
-    else :
-        return {"error" : "request does not contain json body"}, 400
+
+    return {"error" : "request does not contain json body"}, 400
 
 @app.route('/api/swagger', strict_slashes=False)
 def swagger():
@@ -104,17 +103,17 @@ def create_object(object_type):
 
             new_object.edit(new_data)
 
-            if not new_object["name"]:
-                new_object["name"] = generate_id()
-            assert core.instance.model.get_obj(object_type, new_object["name"]) is None, "Object already exist with that name"
+            if not new_object.data.get("name"):
+                new_object.data["name"] = generate_id()
+            assert core.instance.model.get_obj(object_type, new_object.data["name"]) is None, "Object already exist with that name"
 
             # Add to model
             core.instance.model.add_obj(object_type, new_object)
             return new_object.data
-        
+
         return endpoint_wrapper(object_type, create_method)
-    else :
-        return {"error" : "request does not contain json body"}, 400
+
+    return {"error" : "request does not contain json body"}, 400
 
 @app.route('/api/<object_type>/<object_name>', methods = ['PUT'])
 def edit_object(object_type, object_name):
@@ -134,10 +133,10 @@ def edit_object(object_type, object_name):
             core.instance.logger.logs(object_type, object_name+" has been edited")
 
             return new_object.data
-        
+
         return endpoint_wrapper(object_type, edit_method)
-    else :
-        return {"error" : "request does not contain json body"}, 400
+
+    return {"error" : "request does not contain json body"}, 400
 
 @app.route('/api/<object_type>/<object_name>', methods = ['DELETE'])
 def delete_object(object_type, object_name):
@@ -159,21 +158,21 @@ def import_object(object_type):
         object_file = request.files[object_type]
         imported = core.instance.import_object(object_file, object_type)
         return imported.data
-    
+
     return endpoint_wrapper(object_type, import_method)
 
 
 def endpoint_wrapper(object_type, endpoint_method):
     """ Wrap api actions with exceptions and map objects """
-    
+
     try:
         if object_type in core.instance.validator.get_object_types():
             return endpoint_method(), 201
-        else:
-            # unknown type of object
-            err = {"error" : f"unable to create {object_type}", "details": "This kind of object doesn't exist" }
-            print(json.dumps(err))
-            return err, 400
+
+        # else unknown type of object
+        err = {"error" : f"unable to create {object_type}", "details": "This kind of object doesn't exist" }
+        print(json.dumps(err))
+        return err, 400
     except AssertionError as exception:
         err = {"error" : f"Error with {object_type}", "details": exception.args[0] }
         print(json.dumps(err))
@@ -186,10 +185,3 @@ def endpoint_wrapper(object_type, endpoint_method):
         print(type(exception).__name__)
         print(traceback.format_exc())
         return err, 400
-
-
-# if __name__ == "__main__":
-#     HOST = "0.0.0.0"
-#     port = int(os.getenv('PORT', "81"))
-
-#     app.run(host=HOST, port=port)

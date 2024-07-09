@@ -30,5 +30,8 @@ pip install -r backend/src/requirements.txt
 
 cd backend/src
 flask run
-## Or
-gunicorn --config gunicorn_config.py app:app
+
+### Or
+gunicorn app:app
+
+# Linting

@@ -1,12 +1,12 @@
 """ Module for core """
 from os.path import splitext
 import os
+import yaml
 from exceptions import ImportException
 from validator import Validator
 from model import Model
 from logger import Logger
-import yaml
-import json
+
 
 
 class Core:
@@ -45,6 +45,7 @@ class Core:
             #self.schema = JsonRef.replace_refs(schema)
 
     def replace_schema(self, new_schema):
+        """ To update a swagger schema """
         # update only definition part
 
         error_definition = self.schema["definitions"]["error"]
@@ -57,7 +58,6 @@ class Core:
 
         # init object validator module
         self.validator.load_schema(self.schema)
-        
 
     def import_image(self, image_file_name):
         """ Import and install a package """
@@ -76,15 +76,17 @@ class Core:
                 raise ImportException(f"{image_file}: {str(exception)}") from exception
         else:
             raise ImportException(f"Image {image_file} is already uploaded !")
-    
+
         return image_file_name
 
 
-    def import_object(object_file, object_type):
+    def import_object(self, object_file, object_type):
+        """ To import an object """
         print(object_file)
+        print(object_type)
         # TODO import_object
 
-        return True
+        return object_file
 
 
 # Singleton pattern

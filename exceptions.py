@@ -1,7 +1,7 @@
 """ Module for exceptions """
 import traceback
 
-class BaseException(Exception):
+class MyBaseException(Exception):
     """ Base of all exception """
     def __init__(self, message):
         super().__init__(message)
@@ -9,5 +9,5 @@ class BaseException(Exception):
         print(message)
         print(traceback.format_exc())
 
-class ImportException(BaseException):
+class ImportException(MyBaseException):
     """ Import related"""
