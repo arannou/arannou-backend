@@ -6,6 +6,7 @@ from validator import Validator
 from model import Model
 from logger import Logger
 import yaml
+import json
 
 
 class Core:
@@ -39,8 +40,8 @@ class Core:
         self.version=""
 
         # Backend version
-        if os.path.exists("../version"):
-            with open("../version", 'r', encoding="utf-8") as config:
+        if os.path.exists("../version.txt"):
+            with open("../version.txt", 'r', encoding="utf-8") as config:
                 self.version = config.read().replace('\n', '')
         else:
             self.version = "unknown"
@@ -56,6 +57,21 @@ class Core:
             self.schema = yaml.load(file, Loader=yaml.FullLoader)
             self.schema["info"]["version"] = self.version
             #self.schema = JsonRef.replace_refs(schema)
+
+    def replace_schema(self, new_schema):
+        # update only definition part
+
+        error_definition = self.schema["definitions"]["error"]
+        self.schema["definitions"] = new_schema["definitions"]
+        self.schema["definitions"]["error"] = error_definition
+
+        # save schema
+        with open('./static_root/swagger.yaml', 'w', encoding="utf-8") as outfile:
+            yaml.dump(self.schema, outfile)
+
+        # init object validator module
+        self.validator.load_schema(self.schema)
+        
 
     def import_image(self, image_file_name):
         """ Import and install a package """

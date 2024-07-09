@@ -8,9 +8,11 @@ from utils import valid_path_to_string
 class Validator:
     """ Validated inputs """
     def __init__(self, schema):
+        self.load_schema(schema)
+
+    def load_schema(self, schema):
         # Load ref parsed schema
         self.schemas = jsonref.loads(json.dumps(schema))
-
 
     def get_object_types(self):
         return list(self.schemas['definitions'].keys())
