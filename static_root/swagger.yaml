@@ -25,16 +25,6 @@ info:
   title: Arannou backend
   version: local
 paths:
-  /datetime:
-    get:
-      description: "Date and time of the api instance with UTC datetime iso8601 format\
-        \ {\"datetime_utc\": \"YYYY-MM-DD HH:mm:ss.\xB5\xB5\xB5\xB5\xB5\xB5\"}"
-      responses:
-        '200':
-          description: Date and time for the application
-      summary: Get datetime
-      tags:
-      - Diverse
   /schema:
     get:
       description: Swagger schema is the whole application data model. Respecting

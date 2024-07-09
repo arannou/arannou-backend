@@ -3,7 +3,7 @@ import os
 import json
 from baseObject import BaseObject
 
-MODEL_PATH = "../installation/models/"
+MODEL_PATH = "./installation/models/"
 class Model:
     """ Model for data management """
     def __init__(self, core):

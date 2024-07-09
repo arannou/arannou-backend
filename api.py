@@ -24,7 +24,7 @@ dictConfig({
         'file': {
             'class': 'logging.FileHandler',
             'formatter': 'default',
-            'filename': '../installation/app.logs'
+            'filename': './installation/app.logs'
         }
     },
     'root': {
@@ -52,8 +52,7 @@ def index():
 def version():
     """ Return current version of instance """
     return {
-        "status":"ok",
-        "version": core.instance.version
+        "status":"ok"
     }
 
 ################
