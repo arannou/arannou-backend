@@ -36,7 +36,6 @@ class Model:
                 model_obj = json.load(model_file)
 
                 # Load
-                # if model_type == "bananas":
                 for obj in model_obj:
                     self.state[model_type].append(BaseObject(object_data=obj))
 
@@ -82,10 +81,3 @@ class Model:
         # Save on disk
         self.save()
 
-    def get_package(self, name, version):
-        """ Return package with name and version if exists """
-        matches = [pkg for pkg in self.state["packages"] if pkg["name"] == name and pkg["version"] == version]
-
-        if len(matches) == 0:
-            return None
-        return matches[0]

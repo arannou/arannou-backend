@@ -65,6 +65,16 @@ def get_schema():
     """ Return schema """
     return core.instance.schema
 
+@app.route('/api/schema', methods = ['POST'])
+def post_schema():
+    """ Return schema """
+    if request.is_json:
+        new_schema = request.get_json()
+        core.instance.replace_schema(new_schema)
+        return 'ok', 201
+    else :
+        return {"error" : "request does not contain json body"}, 400
+
 @app.route('/api/swagger', strict_slashes=False)
 def swagger():
     """ Return swagger file """
@@ -91,9 +101,7 @@ def create_object(object_type):
             assert validator_error is None, {"validator": validator_error}
 
             # Create object
-            # if object_type == "bananas":
             new_object = BaseObject()
-
 
             new_object.edit(new_data)
 
