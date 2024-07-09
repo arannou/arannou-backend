@@ -1,0 +1,162 @@
+swagger: "2.0"
+basePath: /api
+info:
+  title: Arannou backend
+  description: These APIs let you interact with projects by arannou
+  version: local
+paths:
+  /schema:
+    get:
+      description: "Swagger schema is the whole application data model. Respecting Swagger openapi reference."
+      summary: "Get swagger schema"
+      tags:
+        - Diverse
+      responses:
+        "200":
+          description: Swagger schema for the application
+
+  /datetime:
+    get:
+      description: 'Date and time of the api instance with UTC datetime iso8601 format {"datetime_utc": "YYYY-MM-DD HH:mm:ss.µµµµµµ"}'
+      summary: "Get datetime"
+      tags:
+        - Diverse
+      responses:
+        "200":
+          description: Date and time for the application
+
+  /{object_type}:
+    get:
+      summary: "Get all object of object_type"
+      parameters:
+        - in: path
+          name: object_type
+          type: string
+          required: true
+          description: Object type
+      responses:
+        "200":
+          description: List of objects
+          schema:
+            type: object
+    post:
+      summary: "Add a new object_type"
+      parameters:
+        - in: path
+          name: object_type
+          type: string
+          required: true
+          description: Object type
+        - in: body
+          description: Well formed model object
+          required: true
+          name: Object body
+          schema:
+            type: object
+
+      responses:
+        "201":
+          description: Object added. The responses contains the new created object as it might have new properties added by back end
+        "400":
+          description: Bad request. Overview message and detailed informations
+          schema:
+            $ref: "#/definitions/error"
+
+  /{object_type}/{name}:
+    put:
+      summary: "Update an object of object_type"
+      parameters:
+        - in: path
+          name: object_type
+          type: string
+          required: true
+          description: Object type
+        - in: path
+          name: name
+          type: string
+          required: true
+          description: Object name
+        - in: body
+          description: New object containing your modifications
+          required: true
+          name: Object body
+          schema:
+            type: object
+
+      responses:
+        "201":
+          description: Object updated
+        "400":
+          description: Bad request. Overview message and detailed informations
+          schema:
+            $ref: "#/definitions/error"
+
+    delete:
+      summary: "Delete an object of object_type"
+      parameters:
+        - in: path
+          name: object_type
+          type: string
+          required: true
+          description: Object type
+        - in: path
+          name: name
+          type: string
+          required: true
+          description: Object name
+      responses:
+        "201":
+          description: Object deleted
+        "400":
+          description: Bad request. Overview message and detailed informations
+          schema:
+            $ref: "#/definitions/error"
+
+  /upload-image:
+    post:
+      summary: "Import a image"
+      description: Import a picture like jpeg, gif, png...
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          description: Image file
+          required: true
+          name: image
+          type: file
+      responses:
+        "200":
+          description: Image imported
+        "400":
+          description: Bad request. Overview message and detailed informations
+          schema:
+            $ref: "#/definitions/error"
+
+definitions:
+  bananas:
+    type: object
+    required:
+      - name
+    properties:
+      name:
+        title: Name
+        type: string
+
+  apples:
+    type: object
+    required:
+      - name
+    properties:
+      name:
+        title: Name
+        type: string
+
+  error:
+    type: object
+    properties:
+      error:
+        type: string
+        description: Title of the error
+      details:
+        type: object
+        description: more details about the error.
