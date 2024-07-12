@@ -1,4 +1,4 @@
-""" Module for baseObject """
+""" Module for base_object """
 
 from utils import current_date_time, generate_id
 

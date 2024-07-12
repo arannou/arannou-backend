@@ -1,11 +1,11 @@
 """ Module for api endpoints"""
-import os
 import json
 from logging.config import dictConfig
 import traceback
 from flask import Flask, request, redirect, render_template
 from flask_cors import CORS
-from baseObject import BaseObject
+from base_object import BaseObject
+from utils import generate_id
 import core
 
 # Create flask app
@@ -23,7 +23,7 @@ dictConfig({
         'file': {
             'class': 'logging.FileHandler',
             'formatter': 'default',
-            'filename': '../installation/app.logs'
+            'filename': './installation/app.logs'
         }
     },
     'root': {
@@ -51,8 +51,7 @@ def index():
 def version():
     """ Return current version of instance """
     return {
-        "status":"ok",
-        "version": core.instance.version
+        "status":"ok"
     }
 
 ################
@@ -63,6 +62,16 @@ def version():
 def get_schema():
     """ Return schema """
     return core.instance.schema
+
+@app.route('/api/schema', methods = ['POST'])
+def post_schema():
+    """ Return schema """
+    if request.is_json:
+        new_schema = request.get_json()
+        core.instance.replace_schema(new_schema)
+        return 'ok', 201
+
+    return {"error" : "request does not contain json body"}, 400
 
 @app.route('/api/swagger', strict_slashes=False)
 def swagger():
@@ -108,10 +117,10 @@ def edit_object(object_type, object_id):
             core.instance.logger.logs(object_type, object_id+" has been edited")
 
             return new_object.data
-        
+
         return endpoint_wrapper(object_type, edit_method)
-    else :
-        return {"error" : "request does not contain json body"}, 400
+
+    return {"error" : "request does not contain json body"}, 400
 
 @app.route('/api/<object_type>/<object_id>', methods = ['DELETE'])
 def delete_object(object_type, object_id):
@@ -139,15 +148,15 @@ def import_objects(object_file):
 
 def endpoint_wrapper(object_type, endpoint_method):
     """ Wrap api actions with exceptions and map objects """
-    
+
     try:
         if object_type in core.instance.validator.get_object_types():
             return endpoint_method(), 201
-        else:
-            # unknown type of object
-            err = {"error" : f"unable to create {object_type}", "details": "This kind of object doesn't exist" }
-            print(json.dumps(err))
-            return err, 400
+
+        # else unknown type of object
+        err = {"error" : f"unable to create {object_type}", "details": "This kind of object doesn't exist" }
+        print(json.dumps(err))
+        return err, 400
     except AssertionError as exception:
         err = {"error" : f"Error with {object_type}", "details": exception.args[0] }
         print(json.dumps(err))
@@ -160,10 +169,3 @@ def endpoint_wrapper(object_type, endpoint_method):
         print(type(exception).__name__)
         print(traceback.format_exc())
         return err, 400
-
-
-# if __name__ == "__main__":
-#     HOST = "0.0.0.0"
-#     port = int(os.getenv('PORT', "81"))
-
-#     app.run(host=HOST, port=port)

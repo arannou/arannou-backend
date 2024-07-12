@@ -1,9 +1,9 @@
 """ Module for model """
 import os
 import json
-from baseObject import BaseObject
+from base_object import BaseObject
 
-MODEL_PATH = "../installation/models/"
+MODEL_PATH = "./installation/models/"
 class Model:
     """ Model for data management """
     def __init__(self, core):
@@ -11,8 +11,8 @@ class Model:
 
         # Model default values
         self.state = {}
-        for t in self.core.validator.get_object_types():
-            self.state[t] = []
+        for stuff in self.core.validator.get_object_types():
+            self.state[stuff] = []
 
         self.load_model_if_possible()
 
@@ -36,7 +36,6 @@ class Model:
                 model_obj = json.load(model_file)
 
                 # Load
-                # if model_type == "bananas":
                 for obj in model_obj:
                     self.state[model_type].append(BaseObject(model_type, object_data=obj))
 

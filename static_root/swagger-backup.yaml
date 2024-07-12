@@ -85,7 +85,7 @@ paths:
 
       responses:
         "201":
-          description: Cluster updated
+          description: Object updated
         "400":
           description: Bad request. Overview message and detailed informations
           schema:

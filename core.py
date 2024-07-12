@@ -1,12 +1,13 @@
 """ Module for core """
 from os.path import splitext
 import os
-from baseObject import BaseObject
+from base_object import BaseObject
+import yaml
 from exceptions import ImportException
 from validator import Validator
 from model import Model
 from logger import Logger
-import yaml
+
 
 
 class Core:
@@ -17,15 +18,12 @@ class Core:
         os.chdir(os.path.dirname(__file__))
 
         # load all app conf
-        self.logs_path      = os.path.join("../installation", "./app.logs")
-        self.images_path    = os.path.join("../installation", "./images")
-        self.mock_path      = os.path.join("../installation", "./mocking.json")
+        self.logs_path      = os.path.join("./installation", "./app.logs")
+        self.images_path    = os.path.join("./installation", "./images")
+        self.mock_path      = os.path.join("./installation", "./mocking.json")
 
         # Init logger
         self.logger = Logger(self.logs_path)
-
-        # Parse version
-        self.parse_version()
 
         # Load schema
         self.load_schema()
@@ -35,16 +33,6 @@ class Core:
         # Init model
         self.model = Model(self)
 
-    def parse_version(self):
-        """ Parse version from config """
-        self.version=""
-
-        # Backend version
-        if os.path.exists("../version"):
-            with open("../version", 'r', encoding="utf-8") as config:
-                self.version = config.read().replace('\n', '')
-        else:
-            self.version = "unknown"
 
     def load_schema(self):
         """ Loads yaml swagger schema """
@@ -55,7 +43,6 @@ class Core:
 
         with open("./static_root/swagger.yaml", 'r', encoding="utf-8") as file:
             self.schema = yaml.load(file, Loader=yaml.FullLoader)
-            self.schema["info"]["version"] = self.version
             #self.schema = JsonRef.replace_refs(schema)
 
     def create_method(self, new_data, object_type):
@@ -73,6 +60,21 @@ class Core:
         self.model.add_obj(object_type, new_object)
         return new_object.data
         
+    def replace_schema(self, new_schema):
+        """ To update a swagger schema """
+        # update only definition part
+
+        error_definition = self.schema["definitions"]["error"]
+        self.schema["definitions"] = new_schema["definitions"]
+        self.schema["definitions"]["error"] = error_definition
+
+        # save schema
+        with open('./static_root/swagger.yaml', 'w', encoding="utf-8") as outfile:
+            yaml.dump(self.schema, outfile)
+
+        # init object validator module
+        self.validator.load_schema(self.schema)
+
     def import_image(self, image_file_name):
         """ Import and install a package """
         image_file, ext = splitext(image_file_name.filename)
@@ -90,7 +92,7 @@ class Core:
                 raise ImportException(f"{image_file}: {str(exception)}") from exception
         else:
             raise ImportException(f"Image {image_file} is already uploaded !")
-    
+
         return image_file_name
 
 
@@ -100,7 +102,7 @@ class Core:
                 if ob["type"] in self.validator.get_object_types():
                     self.create_method(ob, ob["type"])
 
-        return True
+        return object_file
 
 
 # Singleton pattern

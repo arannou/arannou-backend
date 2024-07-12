@@ -1,6 +1,5 @@
 """ Module for common functions """
 import uuid
-from os import kill
 from datetime import datetime
 
 def current_date_time():

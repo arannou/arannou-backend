@@ -8,11 +8,14 @@ from utils import valid_path_to_string
 class Validator:
     """ Validated inputs """
     def __init__(self, schema):
-        # Load ref parsed schema
+        self.load_schema(schema)
+
+    def load_schema(self, schema):
+        """ Load ref parsed schema """
         self.schemas = jsonref.loads(json.dumps(schema))
 
-
     def get_object_types(self):
+        """ Get all existing object types """
         return list(self.schemas['definitions'].keys())
 
 
@@ -41,11 +44,10 @@ class Validator:
 
         return valid_path_to_string(required_error.path)+"/"+missing_prop
 
-    def validate_object_creation(self, object, new_debug_data):
+    def validate_object_creation(self, created_object, new_debug_data):
         """ Check syntax of object """
-        return self.validate_syntax(object, new_debug_data)
-    
-    def validate_object_edit(self, object, new_debug_data):
+        return self.validate_syntax(created_object, new_debug_data)
+
+    def validate_object_edit(self, edited_object, new_debug_data):
         """ Check syntax of object """
-        return self.validate_syntax(object, new_debug_data)
-    
+        return self.validate_syntax(edited_object, new_debug_data)
