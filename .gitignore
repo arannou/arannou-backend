@@ -24,3 +24,4 @@ installation/
 *api.pid
 .venv/*
 
+images/*

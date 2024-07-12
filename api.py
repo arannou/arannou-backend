@@ -1,10 +1,12 @@
 """ Module for api endpoints"""
 import json
 from logging.config import dictConfig
+import os
 import traceback
 from flask import Flask, request, redirect, render_template
 from flask_cors import CORS
 from base_object import BaseObject
+from exceptions import ImportException
 from utils import generate_id
 import core
 
@@ -133,9 +135,9 @@ def delete_object(object_type, object_id):
 
     return endpoint_wrapper(object_type, delete_method)
 
-
+ 
 @app.route('/api/import', methods=['POST'])
-def import_objects(object_file):
+def import_objects():
     """ Import object from file """
 
     def import_method():
@@ -146,6 +148,29 @@ def import_objects(object_file):
     return endpoint_wrapper("error", import_method)
 
 
+@app.route('/api/upload-image/<category>', methods=['POST'])
+def import_image(category):
+    """ Import image """
+
+    def import_method():
+        if 'image' not in request.files:
+            raise ImportException('No image part in the request')
+
+        file = request.files['image']
+        if file.filename == '':
+            raise ImportException('No selected file')
+
+        folder='images/'+category
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+
+        image_path = os.path.join(folder, file.filename)
+        file.save(image_path)
+
+        return image_path
+    
+    return endpoint_wrapper("error", import_method)
+    
 def endpoint_wrapper(object_type, endpoint_method):
     """ Wrap api actions with exceptions and map objects """
 
@@ -157,7 +182,7 @@ def endpoint_wrapper(object_type, endpoint_method):
         err = {"error" : f"unable to create {object_type}", "details": "This kind of object doesn't exist" }
         print(json.dumps(err))
         return err, 400
-    except AssertionError as exception:
+    except (ImportException, AssertionError) as exception:
         err = {"error" : f"Error with {object_type}", "details": exception.args[0] }
         print(json.dumps(err))
         print(type(exception).__name__)

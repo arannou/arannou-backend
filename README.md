@@ -9,15 +9,11 @@ Activate virtual environment
 ./.venv/Scripts/Activate.ps1
 
 Install requirements
-pip install -r backend/src/requirements.txt
+pip install -r requirements.txt
 
-Run project
-python backend\src\wsgi.py
+Run project with flask (or use vs-code launch.json)
 
-### Or use flask, or use vs-code launch.json
-cd backend/src
 flask run
-
 
 ## On linux
 
@@ -26,12 +22,12 @@ virtualenv ./venv
 source venv/bin/activate
 
 Install requirements
-pip install -r backend/src/requirements.txt
+pip install -r requirements.txt
 
-cd backend/src
 flask run
 
 ### Or
+
 gunicorn app:app
 
 # Linting

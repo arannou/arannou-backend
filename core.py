@@ -99,8 +99,8 @@ class Core:
     def import_objects(self, object_file):
         with open(object_file, "r", encoding="utf-8") as objects:
             for ob in objects:
-                if ob["type"] in self.validator.get_object_types():
-                    self.create_method(ob, ob["type"])
+                if ob["data_type"] in self.validator.get_object_types():
+                    self.create_method(ob, ob["data_type"])
 
         return object_file
 

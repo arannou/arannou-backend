@@ -9,7 +9,7 @@ definitions:
         title: Name
         type: string
     required:
-    - name
+      - name
     type: object
   error:
     properties:
@@ -25,116 +25,141 @@ info:
   title: Arannou backend
   version: local
 paths:
+  /import:
+    post:
+      parameters:
+        - description: Json file. Must be a list of objects having a data_type attribute
+          in: formData
+          name: import_file
+          required: true
+          type: file
+      responses:
+        "201":
+          description:
+            All objects added. The responses contains the new created objects
+            as it might have new properties added by back end
+        "400":
+          description: Bad request. Overview message and detailed informations
+          schema:
+            $ref: "#/definitions/error"
+      summary: Bulk import a bunch of objects
   /schema:
     get:
-      description: Swagger schema is the whole application data model. Respecting
+      description:
+        Swagger schema is the whole application data model. Respecting
         Swagger openapi reference.
       responses:
-        '200':
+        "200":
           description: Swagger schema for the application
       summary: Get swagger schema
       tags:
-      - Diverse
-  /upload-image:
+        - Diverse
+  /upload-image/{category}:
     post:
       consumes:
-      - multipart/form-data
+        - multipart/form-data
       description: Import a picture like jpeg, gif, png...
       parameters:
-      - description: Image file
-        in: formData
-        name: image
-        required: true
-        type: file
+        - description: Image file
+          in: formData
+          name: image
+          required: true
+          type: file
+        - description: Category to put the image on
+          in: path
+          name: category
+          required: true
+          type: string
       responses:
-        '200':
+        "200":
           description: Image imported
-        '400':
+        "400":
           description: Bad request. Overview message and detailed informations
           schema:
-            $ref: '#/definitions/error'
+            $ref: "#/definitions/error"
       summary: Import a image
   /{object_type}:
     get:
       parameters:
-      - description: Object type
-        in: path
-        name: object_type
-        required: true
-        type: string
+        - description: Object type
+          in: path
+          name: object_type
+          required: true
+          type: string
       responses:
-        '200':
+        "200":
           description: List of objects
           schema:
             type: object
-      summary: Get all object of object_type
+      summary: Get all objects of object_type
     post:
       parameters:
-      - description: Object type
-        in: path
-        name: object_type
-        required: true
-        type: string
-      - description: Well formed model object
-        in: body
-        name: Object body
-        required: true
-        schema:
-          type: object
+        - description: Object type
+          in: path
+          name: object_type
+          required: true
+          type: string
+        - description: Well formed model object
+          in: body
+          name: Object body
+          required: true
+          schema:
+            type: object
       responses:
-        '201':
-          description: Object added. The responses contains the new created object
+        "201":
+          description:
+            Object added. The responses contains the new created object
             as it might have new properties added by back end
-        '400':
+        "400":
           description: Bad request. Overview message and detailed informations
           schema:
-            $ref: '#/definitions/error'
-      summary: Add a new object_type
+            $ref: "#/definitions/error"
+      summary: Add a new object of object_type
   /{object_type}/{name}:
     delete:
       parameters:
-      - description: Object type
-        in: path
-        name: object_type
-        required: true
-        type: string
-      - description: Object name
-        in: path
-        name: name
-        required: true
-        type: string
+        - description: Object type
+          in: path
+          name: object_type
+          required: true
+          type: string
+        - description: Object name
+          in: path
+          name: name
+          required: true
+          type: string
       responses:
-        '201':
+        "201":
           description: Object deleted
-        '400':
+        "400":
           description: Bad request. Overview message and detailed informations
           schema:
-            $ref: '#/definitions/error'
+            $ref: "#/definitions/error"
       summary: Delete an object of object_type
     put:
       parameters:
-      - description: Object type
-        in: path
-        name: object_type
-        required: true
-        type: string
-      - description: Object name
-        in: path
-        name: name
-        required: true
-        type: string
-      - description: New object containing your modifications
-        in: body
-        name: Object body
-        required: true
-        schema:
-          type: object
+        - description: Object type
+          in: path
+          name: object_type
+          required: true
+          type: string
+        - description: Object name
+          in: path
+          name: name
+          required: true
+          type: string
+        - description: New object containing your modifications
+          in: body
+          name: Object body
+          required: true
+          schema:
+            type: object
       responses:
-        '201':
+        "201":
           description: Object updated
-        '400':
+        "400":
           description: Bad request. Overview message and detailed informations
           schema:
-            $ref: '#/definitions/error'
+            $ref: "#/definitions/error"
       summary: Update an object of object_type
-swagger: '2.0'
+swagger: "2.0"
