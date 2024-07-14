@@ -1,15 +1,67 @@
 basePath: /api
 definitions:
-  bananas:
+  myriade_menu_item:
     properties:
-      color:
-        title: Name
+      texteFR:
+        title: Texte FR
+        type: string
+      texteEN:
+        title: Texte EN
+        type: string
+      page:
+        title: Lien de la page
         type: string
       name:
-        title: Name
+        title: Id
+        type: string
+      contenu:
+        type: array
+        title: Liste ordonnée de contenus de la page
+    required:
+      - name
+      - texteFR
+      - texteEN
+      - page
+    type: object
+  myriade_text:
+    properties:
+      texteFR:
+        title: Texte FR
+        type: string
+      texteEN:
+        title: Texte EN
+        type: string
+      position:
+        title: Position (left|center|right)
+        type: string
+      name:
+        title: Id
         type: string
     required:
       - name
+      - texteFR
+      - texteEN
+    type: object
+  myriade_image:
+    properties:
+      source:
+        title: Source
+        type: string
+      texteFR:
+        title: Texte FR
+        type: string
+      texteEN:
+        title: Texte EN
+        type: string
+      position:
+        title: Position (left|center|right)
+        type: string
+      name:
+        title: Id
+        type: string
+    required:
+      - name
+      - source
     type: object
   error:
     properties:
