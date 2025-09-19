@@ -74,6 +74,11 @@ class Model:
         # Write model on disk
         self.save()
 
+    def delete_all_objects(self, object_type):
+        self.state[object_type] = []
+        # Write model on disk
+        self.save()
+
     def add_obj(self, object_type, obj):
         """" Add and save object """
         self.state[object_type].append(obj)
