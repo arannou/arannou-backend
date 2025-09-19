@@ -97,9 +97,11 @@ def get_all_objects(object_type):
 def create_object(object_type):
     """ Create an object from scratch if possible"""
     if request.is_json:
+        def create_method():
+            return core.instance.create_method(request.get_json(), object_type)
         return endpoint_wrapper(
             object_type,
-            core.instance.create_method(request.get_json(), object_type))
+            create_method)
     else :
         return {"error" : "request does not contain json body"}, 400
 
@@ -133,7 +135,7 @@ def delete_object(object_type, object_id):
     def delete_method():
         assert core.instance.model.get_obj(object_type, object_id), f"{object_type} with id '{object_id}' not found"
         core.instance.model.delete_obj(object_type, object_id)
-        return object_id
+        return {"id": object_id}
 
     return endpoint_wrapper(object_type, delete_method)
 
@@ -200,7 +202,7 @@ def endpoint_wrapper(object_type, endpoint_method):
 # Special gommettes
 GOMMETTES_HASH = b'23e1db3a8a421bdeae3773cf31c6cce116afa4c63c11c510f78c858cbec77a03ff164b10c8dffdc218e15791b66e0feac7657314c441fc6df43cc1b12ab52aca'
 
-@app.route("/api/gommettes/reset", methods=["POST"])
+@app.route("/api/gommette/reset", methods=["POST"])
 def reset_scores_api():
     try:
         data = request.get_json()
@@ -208,34 +210,46 @@ def reset_scores_api():
         if "password" not in data:
             raise GommetteException("Missing password")
         if not is_authorized(data["password"], GOMMETTES_HASH):
-            raise GommetteException("Unauthorized")
+            raise GommetteException("Bad password")
 
-        core.instance.delete_all_objects("gommettes")
-        return {"gommettes": get_all_objects("gommettes")}, 200
+        all_names = [user["name"] for user in core.instance.model.get_obj_lists("gommette")]
+        core.instance.delete_all_objects("gommette")
+        for user in all_names:
+            obj = {
+                "name": user,
+                "score": 0
+            }
+            core.instance.create_method(obj, "gommette")
+        return "ok", 200
     except GommetteException as exception:
         return {"error": exception.strerror}, 400
 
-@app.route("/api/gommettes/overwrite", methods=["POST"])
+@app.route("/api/gommette/overwrite", methods=["POST"])
 def overwrite_scores_api():
     try:
         data = request.get_json()
         if "password" not in data:
             raise GommetteException("Missing password")
-        if "scores" not in data:
+        if "data" not in data:
             raise GommetteException("Missing data")
         if not is_authorized(data["password"], GOMMETTES_HASH):
-            raise GommetteException("Unauthorized")
+            raise GommetteException("Bad password")
 
         # check format of data["scores"]
-        if not isinstance(data["scores"], dict):
-            raise GommetteException("Error: scores must be a dict")
-        # for name in data["scores"]:
-        #     if not isinstance(data["scores"][name], int):
-        #         raise GommetteException("Error: scores must be a dict of int")
+        if not isinstance(data["data"], list):
+            raise GommetteException("Error: data must be a list")
+        scores = data["data"]
+        for score in scores:
+            # Validator
+            validator_error = core.instance.validator.validate_object_edit("gommette", score)
+            assert validator_error is None, {"validator": validator_error}
 
-        core.instance.delete_all_objects("gommettes")
-        core.instance.bulk_create_objects("gommettes", data["scores"])
+        core.instance.delete_all_objects("gommette")
+        core.instance.bulk_create_objects("gommette", data["scores"])
 
-        return {"gommettes": get_all_objects("gommettes")}, 200
+        return "ok", 200
     except GommetteException as exception:
         return {"error": exception.strerror}, 400
+    except AssertionError as exception:
+        err = {"error" : f"Error with gommette", "details": exception.args[0] }
+        return err, 400
