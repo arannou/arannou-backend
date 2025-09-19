@@ -5,9 +5,9 @@ import os
 import traceback
 from flask import Flask, request, redirect, render_template
 from flask_cors import CORS
-from base_object import BaseObject
-from exceptions import ImportException
-from utils import generate_id
+from hashlib import blake2b
+from exceptions import ImportException, GommetteException
+
 import core
 
 # Create flask app
@@ -42,7 +42,10 @@ app.config['JSON_SORT_KEYS'] = False
 # Enable cors
 cors = CORS(app)
 
-
+def is_authorized(password, hash):
+    h = blake2b()
+    h.update(password.encode('utf-8'))
+    return h.hexdigest().encode('utf-8') == hash
 
 @app.route('/')
 def index():
@@ -94,7 +97,6 @@ def get_all_objects(object_type):
 def create_object(object_type):
     """ Create an object from scratch if possible"""
     if request.is_json:
-        
         return endpoint_wrapper(
             object_type,
             core.instance.create_method(request.get_json(), object_type))
@@ -135,7 +137,6 @@ def delete_object(object_type, object_id):
 
     return endpoint_wrapper(object_type, delete_method)
 
- 
 @app.route('/api/import', methods=['POST'])
 def import_objects():
     """ Import object from file """
@@ -144,7 +145,7 @@ def import_objects():
         object_file = request.files[object_file]
         imported = core.instance.import_objects(object_file)
         return imported.data
-    
+
     return endpoint_wrapper("error", import_method)
 
 
@@ -168,9 +169,9 @@ def import_image(category):
         file.save(image_path)
 
         return image_path
-    
+
     return endpoint_wrapper("error", import_method)
-    
+
 def endpoint_wrapper(object_type, endpoint_method):
     """ Wrap api actions with exceptions and map objects """
 
@@ -194,3 +195,47 @@ def endpoint_wrapper(object_type, endpoint_method):
         print(type(exception).__name__)
         print(traceback.format_exc())
         return err, 400
+
+
+# Special gommettes
+GOMMETTES_HASH = b'23e1db3a8a421bdeae3773cf31c6cce116afa4c63c11c510f78c858cbec77a03ff164b10c8dffdc218e15791b66e0feac7657314c441fc6df43cc1b12ab52aca'
+
+@app.route("/api/gommettes/reset", methods=["POST"])
+def reset_scores_api():
+    try:
+        data = request.get_json()
+
+        if "password" not in data:
+            raise GommetteException("Missing password")
+        if not is_authorized(data["password"], GOMMETTES_HASH):
+            raise GommetteException("Unauthorized")
+
+        core.instance.delete_all_objects("gommettes")
+        return {"gommettes": get_all_objects("gommettes")}, 200
+    except GommetteException as exception:
+        return {"error": exception.strerror}, 400
+
+@app.route("/api/gommettes/overwrite", methods=["POST"])
+def overwrite_scores_api():
+    try:
+        data = request.get_json()
+        if "password" not in data:
+            raise GommetteException("Missing password")
+        if "scores" not in data:
+            raise GommetteException("Missing data")
+        if not is_authorized(data["password"], GOMMETTES_HASH):
+            raise GommetteException("Unauthorized")
+
+        # check format of data["scores"]
+        if not isinstance(data["scores"], dict):
+            raise GommetteException("Error: scores must be a dict")
+        # for name in data["scores"]:
+        #     if not isinstance(data["scores"][name], int):
+        #         raise GommetteException("Error: scores must be a dict of int")
+
+        core.instance.delete_all_objects("gommettes")
+        core.instance.bulk_create_objects("gommettes", data["scores"])
+
+        return {"gommettes": get_all_objects("gommettes")}, 200
+    except GommetteException as exception:
+        return {"error": exception.strerror}, 400

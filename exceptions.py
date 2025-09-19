@@ -11,3 +11,6 @@ class MyBaseException(Exception):
 
 class ImportException(MyBaseException):
     """ Import related"""
+
+class GommetteException(MyBaseException):
+    """ Wrapper for any PCD exception """
