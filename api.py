@@ -3,9 +3,9 @@ import json
 from logging.config import dictConfig
 import os
 import traceback
+from hashlib import blake2b
 from flask import Flask, request, redirect, render_template
 from flask_cors import CORS
-from hashlib import blake2b
 from exceptions import ImportException, GommetteException
 
 import core
@@ -42,10 +42,11 @@ app.config['JSON_SORT_KEYS'] = False
 # Enable cors
 cors = CORS(app)
 
-def is_authorized(password, hash):
-    h = blake2b()
-    h.update(password.encode('utf-8'))
-    return h.hexdigest().encode('utf-8') == hash
+def is_authorized(password, myhash):
+    """ Check if password is correct """
+    hasher = blake2b()
+    hasher.update(password.encode('utf-8'))
+    return hasher.hexdigest().encode('utf-8') == myhash
 
 @app.route('/')
 def index():
@@ -102,8 +103,8 @@ def create_object(object_type):
         return endpoint_wrapper(
             object_type,
             create_method)
-    else :
-        return {"error" : "request does not contain json body"}, 400
+    # else
+    return {"error" : "request does not contain json body"}, 400
 
 @app.route('/api/<object_type>/<object_id>', methods = ['PUT'])
 def edit_object(object_type, object_id):
@@ -191,7 +192,7 @@ def endpoint_wrapper(object_type, endpoint_method):
         print(type(exception).__name__)
         print(traceback.format_exc())
         return err, 400
-    except Exception as exception:
+    except Exception as exception: #pylint: disable=broad-except
         err = {"error" : f"Error with {object_type}", "details": exception.args }
         print(json.dumps(err))
         print(type(exception).__name__)
@@ -204,6 +205,7 @@ GOMMETTES_HASH = b'23e1db3a8a421bdeae3773cf31c6cce116afa4c63c11c510f78c858cbec77
 
 @app.route("/api/gommette/reset", methods=["POST"])
 def reset_scores_api():
+    """ Set scores of all users to 0"""
     try:
         data = request.get_json()
 
@@ -226,6 +228,7 @@ def reset_scores_api():
 
 @app.route("/api/gommette/overwrite", methods=["POST"])
 def overwrite_scores_api():
+    """ Erase all users and scores and set new ones """
     try:
         data = request.get_json()
         if "password" not in data:
@@ -251,5 +254,5 @@ def overwrite_scores_api():
     except GommetteException as exception:
         return {"error": exception.strerror}, 400
     except AssertionError as exception:
-        err = {"error" : f"Error with gommette", "details": exception.args[0] }
+        err = {"error" : "Error with gommette", "details": exception.args[0] }
         return err, 400
