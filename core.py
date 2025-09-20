@@ -1,8 +1,8 @@
 """ Module for core """
 from os.path import splitext
 import os
-from base_object import BaseObject
 import yaml
+from base_object import BaseObject
 from exceptions import ImportException
 from validator import Validator
 from model import Model
@@ -46,7 +46,8 @@ class Core:
             #self.schema = JsonRef.replace_refs(schema)
 
     def create_method(self, new_data, object_type):
-        
+        """ Create a new object """
+
         # Validator. Stops here if object is invalid
         validator_error = self.validator.validate_object_creation(object_type, new_data)
         assert validator_error is None, {"validator": validator_error}
@@ -59,7 +60,7 @@ class Core:
         # Add to model
         self.model.add_obj(object_type, new_object)
         return new_object.data
-        
+
     def replace_schema(self, new_schema):
         """ To update a swagger schema """
         # update only definition part
@@ -97,12 +98,21 @@ class Core:
 
 
     def import_objects(self, object_file):
+        """ create bulk objects from file """
         with open(object_file, "r", encoding="utf-8") as objects:
-            for ob in objects:
-                if ob["data_type"] in self.validator.get_object_types():
-                    self.create_method(ob, ob["data_type"])
-
+            for obj in objects:
+                if obj["data_type"] in self.validator.get_object_types():
+                    self.create_method(obj, obj["data_type"])
         return object_file
+
+    def bulk_create_objects(self, objects, object_type):
+        """ create bulk objects """
+        for obj in objects:
+            self.create_method(obj, object_type)
+
+    def delete_all_objects(self, object_type):
+        """ Remove all objects of a type """
+        self.model.delete_all_objects(object_type)
 
 
 # Singleton pattern

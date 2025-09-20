@@ -3,11 +3,11 @@ import json
 from logging.config import dictConfig
 import os
 import traceback
+from hashlib import blake2b
 from flask import Flask, request, redirect, render_template
 from flask_cors import CORS
-from base_object import BaseObject
-from exceptions import ImportException
-from utils import generate_id
+from exceptions import ImportException, GommetteException
+
 import core
 
 # Create flask app
@@ -42,7 +42,11 @@ app.config['JSON_SORT_KEYS'] = False
 # Enable cors
 cors = CORS(app)
 
-
+def is_authorized(password, myhash):
+    """ Check if password is correct """
+    hasher = blake2b()
+    hasher.update(password.encode('utf-8'))
+    return hasher.hexdigest().encode('utf-8') == myhash
 
 @app.route('/')
 def index():
@@ -94,12 +98,13 @@ def get_all_objects(object_type):
 def create_object(object_type):
     """ Create an object from scratch if possible"""
     if request.is_json:
-        
+        def create_method():
+            return core.instance.create_method(request.get_json(), object_type)
         return endpoint_wrapper(
             object_type,
-            core.instance.create_method(request.get_json(), object_type))
-    else :
-        return {"error" : "request does not contain json body"}, 400
+            create_method)
+    # else
+    return {"error" : "request does not contain json body"}, 400
 
 @app.route('/api/<object_type>/<object_id>', methods = ['PUT'])
 def edit_object(object_type, object_id):
@@ -131,11 +136,10 @@ def delete_object(object_type, object_id):
     def delete_method():
         assert core.instance.model.get_obj(object_type, object_id), f"{object_type} with id '{object_id}' not found"
         core.instance.model.delete_obj(object_type, object_id)
-        return object_id
+        return {"id": object_id}
 
     return endpoint_wrapper(object_type, delete_method)
 
- 
 @app.route('/api/import', methods=['POST'])
 def import_objects():
     """ Import object from file """
@@ -144,7 +148,7 @@ def import_objects():
         object_file = request.files[object_file]
         imported = core.instance.import_objects(object_file)
         return imported.data
-    
+
     return endpoint_wrapper("error", import_method)
 
 
@@ -168,9 +172,9 @@ def import_image(category):
         file.save(image_path)
 
         return image_path
-    
+
     return endpoint_wrapper("error", import_method)
-    
+
 def endpoint_wrapper(object_type, endpoint_method):
     """ Wrap api actions with exceptions and map objects """
 
@@ -188,9 +192,67 @@ def endpoint_wrapper(object_type, endpoint_method):
         print(type(exception).__name__)
         print(traceback.format_exc())
         return err, 400
-    except Exception as exception:
+    except Exception as exception: #pylint: disable=broad-except
         err = {"error" : f"Error with {object_type}", "details": exception.args }
         print(json.dumps(err))
         print(type(exception).__name__)
         print(traceback.format_exc())
+        return err, 400
+
+
+# Special gommettes
+GOMMETTES_HASH = b'23e1db3a8a421bdeae3773cf31c6cce116afa4c63c11c510f78c858cbec77a03ff164b10c8dffdc218e15791b66e0feac7657314c441fc6df43cc1b12ab52aca'
+
+@app.route("/api/gommette/reset", methods=["POST"])
+def reset_scores_api():
+    """ Set scores of all users to 0"""
+    try:
+        data = request.get_json()
+
+        if "password" not in data:
+            raise GommetteException("Missing password")
+        if not is_authorized(data["password"], GOMMETTES_HASH):
+            raise GommetteException("Bad password")
+
+        all_names = [user["name"] for user in core.instance.model.get_obj_lists("gommette")]
+        core.instance.delete_all_objects("gommette")
+        for user in all_names:
+            obj = {
+                "name": user,
+                "score": 0
+            }
+            core.instance.create_method(obj, "gommette")
+        return "ok", 200
+    except GommetteException as exception:
+        return {"error": exception.strerror}, 400
+
+@app.route("/api/gommette/overwrite", methods=["POST"])
+def overwrite_scores_api():
+    """ Erase all users and scores and set new ones """
+    try:
+        data = request.get_json()
+        if "password" not in data:
+            raise GommetteException("Missing password")
+        if "data" not in data:
+            raise GommetteException("Missing data")
+        if not is_authorized(data["password"], GOMMETTES_HASH):
+            raise GommetteException("Bad password")
+
+        # check format of data["scores"]
+        if not isinstance(data["data"], list):
+            raise GommetteException("Error: data must be a list")
+        scores = data["data"]
+        for score in scores:
+            # Validator
+            validator_error = core.instance.validator.validate_object_edit("gommette", score)
+            assert validator_error is None, {"validator": validator_error}
+
+        core.instance.delete_all_objects("gommette")
+        core.instance.bulk_create_objects("gommette", data["scores"])
+
+        return "ok", 200
+    except GommetteException as exception:
+        return {"error": exception.strerror}, 400
+    except AssertionError as exception:
+        err = {"error" : "Error with gommette", "details": exception.args[0] }
         return err, 400

@@ -50,27 +50,31 @@ class Model:
         for model in os.listdir(MODEL_PATH):
             # Read model file
             model_type = model.split('.json')[0]
+            if model_type not in self.state:
+                continue # unused file
             with open(os.path.join(MODEL_PATH, model), "w", encoding="utf-8") as model_file:
 
                 # Dump result to model file
                 json.dump(self.get_obj_lists(model_type), model_file, indent=2)
 
-    def get_obj(self, object_type, id):
+    def get_obj(self, object_type, _id):
         """ Get object by id """
-        matches=[obj for obj in self.state[object_type] if obj.id == id]
-
+        matches=[obj for obj in self.state[object_type] if obj.data["id"] == _id]
         if len(matches) >= 1:
             return matches[0]
         return None
 
-    def delete_obj(self, object_type, id):
+    def delete_obj(self, object_type, _id):
         """ Delete object"""
-        # Retrieve object
-        obj = self.get_obj(object_type, id)
-
         # Remove it from model
-        self.state[object_type] = [obj for obj in self.state[object_type] if obj.id != id]
+        self.state[object_type] = [obj for obj in self.state[object_type] if obj.data["id"] != _id]
 
+        # Write model on disk
+        self.save()
+
+    def delete_all_objects(self, object_type):
+        """ Remove all objects of a type """
+        self.state[object_type] = []
         # Write model on disk
         self.save()
 

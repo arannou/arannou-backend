@@ -7,7 +7,11 @@ class MyBaseException(Exception):
         super().__init__(message)
         print(type(self).__name__)
         print(message)
+        self.strerror = message
         print(traceback.format_exc())
 
 class ImportException(MyBaseException):
     """ Import related"""
+
+class GommetteException(MyBaseException):
+    """ Wrapper for any PCD exception """
