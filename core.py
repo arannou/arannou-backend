@@ -45,7 +45,7 @@ class Core:
             self.schema = yaml.load(file, Loader=yaml.FullLoader)
             #self.schema = JsonRef.replace_refs(schema)
 
-    def create_method(self, new_data, object_type):
+    def create_object_of_type(self, new_data, object_type):
         """ Create a new object """
 
         # Validator. Stops here if object is invalid
@@ -60,6 +60,22 @@ class Core:
         # Add to model
         self.model.add_obj(object_type, new_object)
         return new_object.data
+
+    def edit_object_of_type(self, object_type, object_id, new_data):
+        """ Edit a given object if possible """
+        object_to_edit = self.model.get_obj(object_type, object_id)
+        assert object_to_edit, f"{object_type} with id {object_id} is not found"
+
+        # Validator
+        validator_error = self.validator.validate_object_edit(object_type, new_data)
+        assert validator_error is None, {"validator": validator_error}
+
+
+        self.model.edit_obj(object_type, object_id, new_data)
+        self.logger.logs(object_type, object_id+" has been edited")
+
+        return object_to_edit.data
+
 
     def replace_schema(self, new_schema):
         """ To update a swagger schema """
@@ -102,7 +118,7 @@ class Core:
         with open(object_file, "r", encoding="utf-8") as objects:
             for obj in objects:
                 if obj["data_type"] in self.validator.get_object_types():
-                    self.create_method(obj, obj["data_type"])
+                    self.create_object_of_type(obj, obj["data_type"])
         return object_file
 
     def bulk_create_objects(self, objects, object_type):

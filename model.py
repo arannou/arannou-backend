@@ -10,8 +10,11 @@ class Model:
         self.core = core
 
         # Model default values
+        skippable = ['error']
         self.state = {}
         for stuff in self.core.validator.get_object_types():
+            if stuff in skippable:
+                continue
             self.state[stuff] = []
 
         self.load_model_if_possible()
@@ -39,6 +42,7 @@ class Model:
                 for obj in model_obj:
                     self.state[model_type].append(BaseObject(model_type, object_data=obj))
 
+                self.core.logger.logs("Model", "loaded "+str(len(model_obj))+" "+model_type)
 
 
     def get_obj_lists(self, object_type):
@@ -57,6 +61,8 @@ class Model:
                 # Dump result to model file
                 json.dump(self.get_obj_lists(model_type), model_file, indent=2)
 
+                self.core.logger.logs("Model", "saved "+str(len(self.get_obj_lists(model_type)))+" "+model_type)
+
     def get_obj(self, object_type, _id):
         """ Get object by id """
         matches=[obj for obj in self.state[object_type] if obj.data["id"] == _id]
@@ -71,6 +77,7 @@ class Model:
 
         # Write model on disk
         self.save()
+        self.core.logger.logs("Model", "deleted "+object_type+" with id "+_id)
 
     def delete_all_objects(self, object_type):
         """ Remove all objects of a type """
@@ -84,3 +91,19 @@ class Model:
 
         # Save on disk
         self.save()
+
+        self.core.logger.logs("Model", "added "+object_type+" with id "+obj.data["id"])
+
+    def edit_obj(self, object_type, _id, new_data):
+        edited_obj = None
+        for obj in self.state[object_type]:
+            if obj.data["id"] == _id:
+                obj.edit(new_data)
+                edited_obj = obj
+                break
+
+        if edited_obj:
+            # Save on disk
+            self.save()
+            return edited_obj.data
+        return None

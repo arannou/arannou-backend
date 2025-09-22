@@ -99,7 +99,7 @@ def create_object(object_type):
     """ Create an object from scratch if possible"""
     if request.is_json:
         def create_method():
-            return core.instance.create_method(request.get_json(), object_type)
+            return core.instance.create_object_of_type(request.get_json(), object_type)
         return endpoint_wrapper(
             object_type,
             create_method)
@@ -112,18 +112,8 @@ def edit_object(object_type, object_id):
     if request.is_json:
         def edit_method():
             new_data = request.get_json()
-            new_object = core.instance.model.get_obj(object_type, object_id)
-            assert new_object, f"{object_type} with id {object_id} is not found"
-
-            # Validator
-            validator_error = core.instance.validator.validate_object_edit(object_type, new_data)
-            assert validator_error is None, {"validator": validator_error}
-
-            new_object.edit(new_data)
-            core.instance.model.save()
-            core.instance.logger.logs(object_type, object_id+" has been edited")
-
-            return new_object.data
+            new_object = core.instance.edit_object_of_type(object_type, object_id, new_data)
+            return new_object
 
         return endpoint_wrapper(object_type, edit_method)
 
